@@ -117,6 +117,31 @@ class SivaBrain {
 
             const data = await response.json();
             
+            // Update Token Monitor UI
+            if (data.usageMetadata) {
+                const monitor = document.getElementById('token-monitor');
+                if (monitor) {
+                    monitor.style.opacity = '1';
+                    document.getElementById('token-input').innerText = data.usageMetadata.promptTokenCount || 0;
+                    document.getElementById('token-output').innerText = data.usageMetadata.candidatesTokenCount || 0;
+                    
+                    const totalTokens = data.usageMetadata.totalTokenCount || 0;
+                    document.getElementById('token-total').innerText = totalTokens.toLocaleString();
+                    
+                    // Limit visual di bar adalah 1 Juta (Kapasitas flash 1M-2M context)
+                    const visualMax = 1000000; 
+                    let percentage = (totalTokens / visualMax) * 100;
+                    if (percentage > 100) percentage = 100;
+                    
+                    document.getElementById('token-bar').style.width = percentage + '%';
+                    
+                    // Ganti warna bar jika sudah melebihi 80% (Warning)
+                    if (percentage > 80) {
+                        document.getElementById('token-bar').style.background = 'linear-gradient(90deg, #f3a000, #ff5e00)';
+                    }
+                }
+            }
+            
             if (data.candidates && data.candidates.length > 0) {
                 let reply = data.candidates[0].content.parts[0].text;
                 this.conversationHistory.push({ role: "model", parts: [{ text: reply }] });
